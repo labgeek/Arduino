@@ -9,7 +9,7 @@
 #define MAX_DISTANCE 300 // sets maximum useable sensor measuring distance to 300cm
 #define MAX_SPEED 200 // sets speed of DC traction motors to 150/250 or about 70% of full speed - to get power drain down.
 #define MAX_SPEED_OFFSET 67 // this sets offset to allow for differences between the two DC traction motors
-#define CRASH_DIST 40 // sets distance at which robot stops and reverses to 30cm
+#define CRASH_DIST 36 // sets distance at which robot stops and reverses to 36 cm
 #define TURN_DIST COLL_DIST+20 // sets distance at which robot veers away from object
 NewPing sonar(TRIG_PIN, ECHO_PIN, MAX_DISTANCE); // sets up sensor library to use the correct pins to measure distance.
 
@@ -35,60 +35,56 @@ void setup() {
   //myservo.attach(10); //this is for later, attaching second ultrasonic sensor
   myservo.write(65); // tells the servo to position at 65 (straight ahead)
   delay(1000); // delay for one second
-  //checkRoute();  //checks the route to find the best route to begin the travel
 
-//  myservo.write(0); 
-//  delay(1000);
-//  distance = readPing2();
-//  Serial.println("Checking Right...");
-//  Serial.println(distance);
-//  
-//  myservo.write(65);
-//  delay(1000); 
-//  distance = readPing2();
-//  Serial.println("Checking Center...");
-//  Serial.println(distance);
-//
-//
-//  myservo.write(145);
-//  delay(1000);
-//   distance = readPing2();
-//  Serial.println("Checking Left...");
-//  Serial.println(distance);
 
-  for(int pos = 180; pos >= 0; pos-=10)
-  {
-    myservo.write(pos);
-    delay(150);
-  }
+  myservo.write(0); 
+  delay(1000);
+  distance = readPing2();
+  Serial.println("Checking Right...");
+  Serial.println(distance);
+  
+  myservo.write(65);
+  delay(1000); 
+  distance = readPing2();
+  Serial.println("Checking Center...");
+  Serial.println(distance);
+
+
+  myservo.write(145);
+  delay(1000);
+   distance = readPing2();
+  Serial.println("Checking Left...");
+  Serial.println(distance);
+
+//  for(int pos = 180; pos >= 0; pos-=10)
+//  {
+//    myservo.write(pos);
+//    delay(150);
+//  }
   
 }
 
 void loop() {
   //checkForward();  //check that if the Obstacle avoiding Robot is supposed to be moving forward
   //checkPath();
-  myservo.write(65);  // move eyes forward (70 is straight ahead for my robot, not 90
-  delay(50);
-  curDist = readPing2();   // read distance
+  myservo.write(65); // move eyes forward (70 is straight ahead for my robot, not 90
+  delay(150);
+  curDist = readPing2(); // read distance
   Serial.println(curDist);
   moveForward();
- 
-  if (curDist < CRASH_DIST){
-    changePath();
-    //delay(500);
-    //backward();
-    
+  if (curDist < CRASH_DIST) { //less than 40
+      changePath();
   }
-}
 
+}
 
 void changePath() {
   totalHalt();   // stop forward movement
-  myservo.write(10);  // check distance to the right
+  myservo.write(11);  // check distance to the right
     delay(100);
     rightDistance = readPing2(); //set right distance
     delay(100);
-    myservo.write(133);  // check distance to the left
+    myservo.write(155);  // check distance to the left
     delay(100);
     leftDistance = readPing2(); //set left distance
     delay(100);
@@ -97,9 +93,14 @@ void changePath() {
     compareDistance();
   }
 
-/**
- * Finds the longest distance to the left, right, and center
- */
+int readPing2(){ 
+  delay(70); 
+  int cm = sonar.ping_cm(); 
+  if (cm==0){ 
+    cm=500; } 
+    return cm; 
+}
+
   void compareDistance()   // find the longest distance
 {
   if (leftDistance>rightDistance) //if left is less obstructed 
@@ -120,28 +121,7 @@ void changePath() {
   }
 }
 
-  void compareDistanceBetter()   // find the longest distance
-{
-  for (int pos = 144; pos >= 36; pos -= 18){
-  if (leftDistance>rightDistance) //if left is less obstructed 
-  {
-    backward();
-    totalHalt();
-    left();
-  }
-  else if (rightDistance>leftDistance) //if right is less obstructed
-  {
-    backward();
-    totalHalt();
-    right();
-  }
-   else //if they are equally obstructed
-  {
-    Serial.println("Left and Right distances are equal");
-  }
-  }
-}
-void motorAon() {
+ void motorAon() {
  digitalWrite (enableA, HIGH);
 }
 void motorBon() {
@@ -166,12 +146,7 @@ void motorAstop() {
  digitalWrite (pinA2, HIGH);
 }
 
-int readPing2(){ 
-  delay(70); 
-  int cm = sonar.ping_cm(); 
-  if (cm==0){ 
-    cm=250; } 
-    return cm; }
+
 
 void motorBstop() {
  digitalWrite (pinB1, HIGH);
@@ -204,7 +179,7 @@ void backward () {
  Serial.println("Moving backwards");
  motorAbackward();
  motorBbackward();
- delay(500);
+ delay(750);
 }
 
 void right () {
@@ -247,11 +222,38 @@ void motorBoff() {
 void motorAbackward() {
  digitalWrite (pinA1, HIGH);
  digitalWrite (pinA2, LOW);
+
+ 
 }
 void motorBbackward() {
  digitalWrite (pinB1, HIGH);
  digitalWrite (pinB2, LOW);
+ // analogWrite(pinB1, 150);
+ //  analogWrite(pinB2, 150);
 }
+
+ void compareDistanceBetter()   // find the longest distance
+{
+  for (int pos = 144; pos >= 36; pos -= 18){
+  if (leftDistance>rightDistance) //if left is less obstructed 
+  {
+    backward();
+    totalHalt();
+    left();
+  }
+  else if (rightDistance>leftDistance) //if right is less obstructed
+  {
+    backward();
+    totalHalt();
+    right();
+  }
+   else //if they are equally obstructed
+  {
+    Serial.println("Left and Right distances are equal");
+  }
+  }
+}
+
 //  for (int pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
 //    // in steps of 1 degree
 //    myservo.write(pos);              // tell servo to go to position in variable 'pos'
