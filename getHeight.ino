@@ -1,7 +1,7 @@
 /*
  * Program name:  getHeight.ino
  * Header file:  Font_Data.h
- * Author:  JD Durick - labgeek@gmail.com
+ * Author:  JD Durick
  * Date:  10/28/2020
  * Version 0.1
  */
@@ -30,8 +30,12 @@ uint16_t scrollPause = 2000; // in milliseconds
 char curMessage[BUF_SIZE] = {
   ""
 };
+
+char curMessage1[BUF_SIZE] = {
+  ""
+};
 char newMessage[BUF_SIZE] = {
-  "    Initial message goes here"
+  "    Biden for President!"
 };
 bool newMessageAvailable = true;
 const uint8_t SPEED_IN = A5;
@@ -47,7 +51,7 @@ textPosition_t scrollAlign = PA_LEFT; // how to align the text
 
 #define SPEED_TIME 75 // speed of the transition
 #define PAUSE_TIME 0
-#define MAX_MESG 20
+#define MAX_MESG 50
 
 char testStr[10] = {
   ""
@@ -81,6 +85,7 @@ uint16_t h, m, s;
 
 char szTime[9]; // mm:ss\0
 char szMesg[MAX_MESG + 1] = "";
+char szMesg1[MAX_MESG + 1] = "";
 
 uint8_t degC[] = {
   6,
@@ -148,11 +153,19 @@ char * dow2str(uint8_t code, char * psz, uint8_t len) {
 void getTime(char * psz, bool f = true)
 // Code for reading clock time
 {
+    Serial.println("in gettime");
   s = Clock.getSecond();
   m = Clock.getMinute();
   h = Clock.getHour(h12, PM);
   // sprintf(psz, "%02d%c%02d", h, (f ? ':' : ' '), m);
-  sprintf(psz, "%02d%c%02d", h, (f ? ':' : ' '), m);
+  //sprintf(psz, "%02d%c%02d", h, (f ? ':' : ' '), m);
+  if(h < 12){
+    Serial.println("AM");
+    sprintf(psz, "  %02d%c%02d%c", h, (f ? ':' : ' '), m, 'A');
+  }
+  else{
+    sprintf(psz, "  %02d%c%02d%c", h, (f ? ':' : ' '), m, 'P');
+  }
   Serial.println(psz);
 
 }
@@ -167,6 +180,30 @@ void getDate(char * psz)
   yyy = Clock.getYear();
   sprintf(psz, "%d %s %04d", dd, mon2str(mm, szBuf, sizeof(szBuf) - 1), (yyy + 2000));
 
+}
+
+
+void get_time_and_date(char * psz, bool f = true){
+  char szBuf[10];
+  s = Clock.getSecond();
+  m = Clock.getMinute();
+  h = Clock.getHour(h12, PM);
+  dd = Clock.getDate();
+  mm = Clock.getMonth(Century); //12
+  yyy = Clock.getYear();
+
+  if(h < 12){
+    //Serial.println("AM");
+    //sprintf(psz, "  %02d%c%02d%c", h, (f ? ':' : ' '), m, 'A');
+    sprintf(psz, "    %02d%c%02d%c %d %s %04d", h, (f ? ':' : ' '), m, 'A', dd, mon2str(mm, szBuf, sizeof(szBuf) - 1),(yyy + 2000));
+  }
+  else{
+    //sprintf(psz, "  %02d%c%02d%c", h, (f ? ':' : ' '), m, 'P');
+    sprintf(psz, "   %02d%c%02d%c %d %s %04d", h, (f ? ':' : ' '), m, 'P', dd, mon2str(mm, szBuf, sizeof(szBuf) - 1),(yyy + 2000));
+  }
+
+  //sprintf(psz, "   %02d%c%02d %d %s %04d", h, (f ? ':' : ' '), m, dd, mon2str(mm, szBuf, sizeof(szBuf) - 1),(yyy + 2000));
+  
 }
 
 void setup() {
@@ -192,9 +229,9 @@ void loop() {
     Serial.println(distance);
     if (P.displayAnimate()) {
       if (newMessageAvailable) {
-        //strcpy(curMessage, newMessage);
         flasher = true;
-        getTime(szMesg, flasher);
+        //getTime(szMesg, flasher);
+        get_time_and_date(szMesg, flasher);
         strcpy(curMessage, szMesg);
         delay(1000);
         P.displayText(curMessage, scrollAlign, scrollSpeed, scrollPause, scrollEffect, scrollEffect);
@@ -202,6 +239,7 @@ void loop() {
       }
       P.displayReset();
     }
+  
 
   }
   if (distance < 90) {
