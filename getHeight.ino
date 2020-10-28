@@ -1,4 +1,10 @@
-//getHeight.ino version 0.1
+/*
+ * Program name:  getHeight.ino
+ * Header file:  Font_Data.h
+ * Author:  JD Durick - labgeek@gmail.com
+ * Date:  10/28/2020
+ * Version 0.1
+ */
 
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
@@ -7,6 +13,8 @@
 #include "Font_Data.h"
 #include <DS3231.h>
 #include <Wire.h>
+#include <TimeLib.h>
+#include <DS1307RTC.h>
 
 DS3231 Clock;
 
@@ -23,7 +31,7 @@ char curMessage[BUF_SIZE] = {
   ""
 };
 char newMessage[BUF_SIZE] = {
-  "    PUT WHATEVER YOU WANT HERE"
+  "    Initial message goes here"
 };
 bool newMessageAvailable = true;
 const uint8_t SPEED_IN = A5;
@@ -36,10 +44,6 @@ textPosition_t scrollAlign = PA_LEFT; // how to align the text
 
 #define trigPin A0
 #define echoPin A1
-
-/*
- * RTC globals
- */
 
 #define SPEED_TIME 75 // speed of the transition
 #define PAUSE_TIME 0
@@ -147,6 +151,7 @@ void getTime(char * psz, bool f = true)
   s = Clock.getSecond();
   m = Clock.getMinute();
   h = Clock.getHour(h12, PM);
+  // sprintf(psz, "%02d%c%02d", h, (f ? ':' : ' '), m);
   sprintf(psz, "%02d%c%02d", h, (f ? ':' : ' '), m);
   Serial.println(psz);
 
@@ -174,19 +179,24 @@ void setup() {
 
 }
 
-// When not measuring your height, it will start scrolling the message you want
 void loop() {
   static uint32_t lastTime = 0; // millis() memory
   static uint8_t display = 0; // current display mode
   static bool flasher = false; // seconds passing flasher
+
+  //getTime(szMesg, flasher);
+  // flasher = !flasher;
 
   measure();
   if (distance > 90) {
     Serial.println(distance);
     if (P.displayAnimate()) {
       if (newMessageAvailable) {
-        strcpy(curMessage, newMessage);
-        delay(3000);
+        //strcpy(curMessage, newMessage);
+        flasher = true;
+        getTime(szMesg, flasher);
+        strcpy(curMessage, szMesg);
+        delay(1000);
         P.displayText(curMessage, scrollAlign, scrollSpeed, scrollPause, scrollEffect, scrollEffect);
         newMessageAvailable = false;
       }
@@ -195,7 +205,6 @@ void loop() {
 
   }
   if (distance < 90) {
-    //your casing needs to be set at 229 cm high (ultrasonic sensor)
     // 229 is 8ft tall (7.5 feet)
     height = 229 - distance;
     inches = (height * 0.393701);
